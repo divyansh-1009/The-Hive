@@ -2,7 +2,9 @@ const express = require('express');
 const config = require('./config');
 const db = require('./config/db');
 const User = require('./models/user');
+const UsageReport = require('./models/usageReport');
 const authRoutes = require('./routes/auth');
+const mobileUsageRoutes = require('./routes/mobileUsage');
 
 const app = express();
 
@@ -11,6 +13,7 @@ app.use(express.json());
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
+app.use('/mobile/usage', mobileUsageRoutes);
 
 // ── Start ────────────────────────────────────────────────────────────────────
 async function start() {
@@ -19,6 +22,7 @@ async function start() {
     console.log('Connected to PostgreSQL.');
 
     await User.createTable();
+    await UsageReport.createTable();
     console.log('Database tables ready.');
 
     app.listen(config.port, () => {
