@@ -3,8 +3,10 @@ const config = require('./config');
 const db = require('./config/db');
 const User = require('./models/user');
 const UsageReport = require('./models/usageReport');
+const ExtensionUsage = require('./models/extensionUsage');
 const authRoutes = require('./routes/auth');
 const mobileUsageRoutes = require('./routes/mobileUsage');
+const extensionUsageRoutes = require('./routes/extensionUsage');
 
 const app = express();
 
@@ -14,6 +16,7 @@ app.use(express.json());
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
 app.use('/mobile/usage', mobileUsageRoutes);
+app.use('/extension/usage', extensionUsageRoutes);
 
 // ── Start ────────────────────────────────────────────────────────────────────
 async function start() {
@@ -23,6 +26,7 @@ async function start() {
 
     await User.createTable();
     await UsageReport.createTable();
+    await ExtensionUsage.createTable();
     console.log('Database tables ready.');
 
     app.listen(config.port, () => {
