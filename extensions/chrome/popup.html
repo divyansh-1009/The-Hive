@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The Hive</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 320px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f4f5f7;
+        color: #333;
+      }
+      header {
+        background: #1a73e8;
+        color: #fff;
+        padding: 14px 16px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      /* Auth */
+      #auth-section {
+        padding: 16px;
+      }
+      #auth-section input {
+        width: 100%;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      #auth-section .btn-row {
+        display: flex;
+        gap: 8px;
+      }
+      #auth-section button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+        color: #fff;
+        background: #1a73e8;
+      }
+      #auth-section button:hover {
+        background: #1558b0;
+      }
+      #auth-error {
+        color: #d93025;
+        font-size: 12px;
+        margin-top: 6px;
+        display: none;
+      }
+
+      /* Dashboard */
+      #dashboard {
+        display: none;
+        padding: 16px;
+      }
+      #user-info {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #user-info button {
+        background: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #current-site {
+        text-align: center;
+        padding: 16px 0;
+      }
+      #current-site .label {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 4px;
+      }
+      #current-site .site {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a73e8;
+      }
+      #current-site .inactive {
+        color: #aaa;
+        font-style: italic;
+      }
+      .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+      .status-dot.active {
+        background: #34a853;
+      }
+      .status-dot.idle {
+        background: #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <header>The Hive — Tab Tracker</header>
+
+    <!-- Auth -->
+    <div id="auth-section">
+      <input id="auth-name" type="text" placeholder="Name (signup only)" />
+      <input id="auth-email" type="email" placeholder="Email" />
+      <input id="auth-password" type="password" placeholder="Password" />
+      <div class="btn-row">
+        <button id="btn-login">Log In</button>
+        <button id="btn-signup">Sign Up</button>
+      </div>
+      <div id="auth-error"></div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard">
+      <div id="user-info">
+        <span id="user-label"></span>
+        <button id="btn-logout">Log out</button>
+      </div>
+      <div id="current-site">
+        <div class="label">Currently tracking</div>
+        <div id="site-display"></div>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

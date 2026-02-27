@@ -22,7 +22,6 @@ class UsageTrackingWorker(
         private const val WORK_NAME = "daily_usage_report"
 
         fun schedule(context: Context) {
-            // Calculate delay until next midnight
             val now = Calendar.getInstance()
             val midnight = Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_YEAR, 1)
@@ -63,7 +62,7 @@ class UsageTrackingWorker(
                 return Result.success()
             }
 
-            val sent = UsageApiClient.sendReport(report)
+            val sent = UsageApiClient.sendReport(applicationContext, report)
             if (sent) {
                 Log.i(TAG, "Report for ${report.date} sent (${report.apps.size} apps)")
                 Result.success()

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "The Hive - Tab Tracker",
+  "version": "1.0.0",
+  "description": "Tracks website usage and syncs with The Hive central server.",
+  "permissions": [
+    "tabs",
+    "activeWindow",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "The Hive - Tab Tracker"
+  }
+}

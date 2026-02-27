@@ -1,5 +1,6 @@
 package com.example.mobileapplication.network
 
+import android.content.Context
 import android.util.Log
 import com.example.mobileapplication.model.UsageReport
 import com.google.gson.Gson
@@ -13,8 +14,8 @@ object UsageApiClient {
 
     private const val TAG = "UsageApiClient"
 
-    // Change this to your actual server URL
-    var SERVER_URL = "https://webhook.site/e055f727-e8c2-433d-b917-a25767a96632"
+    // Change this to your actual server URL (e.g. http://192.168.x.x:3000)
+    var BASE_URL = "http://10.0.2.2:3000"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -24,13 +25,20 @@ object UsageApiClient {
 
     private val gson = Gson()
 
-    fun sendReport(report: UsageReport): Boolean {
+    fun sendReport(context: Context, report: UsageReport): Boolean {
+        val token = TokenManager.getToken(context)
+        if (token == null) {
+            Log.w(TAG, "No auth token — skipping report upload")
+            return false
+        }
+
         val json = gson.toJson(report)
         Log.d(TAG, "Sending report: $json")
 
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val request = Request.Builder()
-            .url(SERVER_URL)
+            .url("$BASE_URL/mobile/usage")
+            .addHeader("Authorization", "Bearer $token")
             .post(body)
             .build()
 

@@ -84,7 +84,7 @@ fun UsageTrackerScreen(modifier: Modifier = Modifier) {
             Button(onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
                     val report = UsageStatsHelper.collectDailyUsage(context)
-                    UsageApiClient.sendReport(report)
+                    UsageApiClient.sendReport(context, report)
                 }
             }) {
                 Text("Send Now (Test)")
