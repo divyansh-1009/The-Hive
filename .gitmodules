@@ -1,6 +1,4 @@
 [submodule "productivity-tracker"]
-	path = productivity-tracker
-	url = https://github.com/anirudhiitj/productivity-tracker.git
-	branch = anirudh
-[submodule "<folder-name>"]
-	branch = anirudh
+        path = productivity-tracker
+        url = https://github.com/anirudhiitj/productivity-tracker.git
+        branch = anirudh
