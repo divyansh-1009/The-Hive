@@ -116,22 +116,26 @@
   <body>
     <header>The Hive — Tab Tracker</header>
 
-    <!-- Auth -->
-    <div id="auth-section">
-      <input id="auth-email" type="email" placeholder="Email" />
-      <input id="auth-password" type="password" placeholder="Password" />
-      <select id="auth-persona" style="width:100%;padding:8px 10px;margin-bottom:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
-        <option value="GENERAL">General</option>
-        <option value="CS">Computer Science</option>
-        <option value="DESIGN">Design</option>
-        <option value="BUSINESS">Business</option>
-      </select>
-      <div class="btn-row">
-        <button id="btn-login">Log In</button>
-        <button id="btn-signup">Sign Up</button>
-      </div>
-      <div id="auth-error"></div>
-    </div>
+  <div id="auth-section">
+  <input id="auth-username" type="text" placeholder="Username" />
+  <input id="auth-email" type="email" placeholder="Email" />
+  <input id="auth-password" type="password" placeholder="Password" />
+
+  <select id="auth-persona" style="width:100%;padding:8px 10px;margin-bottom:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
+    <option value="">Select Category</option>
+    <option value="GENERAL">General</option>
+    <option value="CS">Computer Science</option>
+    <option value="DESIGN">Design</option>
+    <option value="BUSINESS">Business</option>
+  </select>
+
+  <div class="btn-row">
+    <button id="btn-login">Log In</button>
+    <button id="btn-signup">Sign Up</button>
+  </div>
+
+  <div id="auth-error" style="color:#d93025;font-size:12px;margin-top:6px;display:none;"></div>
+</div>
 
     <!-- Dashboard -->
     <div id="dashboard">

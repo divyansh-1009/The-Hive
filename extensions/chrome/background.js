@@ -44,12 +44,12 @@ updateIdleState(); // Initial check on startup
 
 // ── Send event to server ────────────────────────────────────────────────────
 async function sendEvent(site, state) {
-  const { token } = await chrome.storage.local.get(["token"]);
-  if (!token) return;
-
-  const id = await getOrCreateDeviceId();
-
   try {
+    const { token } = await chrome.storage.local.get(["token"]);
+    if (!token) return;
+
+    const id = await getOrCreateDeviceId();
+
     await fetch(`${SERVER_URL}/api/activity/chrome`, {
       method: "POST",
       headers: {
@@ -58,14 +58,14 @@ async function sendEvent(site, state) {
       },
       body: JSON.stringify({
         deviceId: id,
-        site,
+        site: site || "unknown",
         state,
         idleState: userIdleState,
         timestamp: Date.now(),
       }),
     });
   } catch (err) {
-    console.error(`Failed to send ${state} event for ${site}:`, err);
+    console.error("Activity tracking error:", err);
   }
 }
 

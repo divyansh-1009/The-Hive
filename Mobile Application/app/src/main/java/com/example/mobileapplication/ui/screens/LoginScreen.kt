@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.provider.Settings
 import com.example.mobileapplication.network.AuthApiClient
 import com.example.mobileapplication.network.TokenManager
 import com.example.mobileapplication.ui.theme.CyanBlue
@@ -208,7 +209,11 @@ fun LoginScreen(
                         errorMessage = null
                         scope.launch {
                             val response = withContext(Dispatchers.IO) {
-                                AuthApiClient.login(email.trim(), password)
+                                val deviceId = Settings.Secure.getString(
+                                    context.contentResolver,
+                                    Settings.Secure.ANDROID_ID
+                                ) ?: "unknown"
+                                AuthApiClient.login(email.trim(), password, deviceId)
                             }
                             isLoading = false
                             when {

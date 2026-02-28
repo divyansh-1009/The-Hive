@@ -40,16 +40,21 @@ async function register(req, res) {
 }
 
 // POST /api/auth/login
-// Body: { email, password }
+// Body: { email, password, deviceId, deviceType }
 async function login(req, res) {
   try {
-    const { email, password } = req.body;
+    const { email, password, deviceId, deviceType } = req.body;
 
     const user = await User.findByEmail(email);
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+
+    // Link device if provided (for new devices logging in)
+    if (deviceId && deviceType) {
+      await Device.link(deviceId, user.user_id, deviceType);
+    }
 
     const token = generateToken(user.user_id);
     return res.status(200).json({

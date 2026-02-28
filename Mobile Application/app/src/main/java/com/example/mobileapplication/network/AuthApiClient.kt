@@ -19,7 +19,9 @@ data class RegisterRequest(
 
 data class LoginRequest(
     val email: String,
-    val password: String
+    val password: String,
+    val deviceId: String,
+    val deviceType: String = "mobile"
 )
 
 data class AuthResponse(
@@ -48,10 +50,10 @@ object AuthApiClient {
         )
     }
 
-    fun login(email: String, password: String): AuthResponse? {
+    fun login(email: String, password: String, deviceId: String): AuthResponse? {
         return post(
             "${UsageApiClient.BASE_URL}/api/auth/login",
-            LoginRequest(email = email, password = password)
+            LoginRequest(email = email, password = password, deviceId = deviceId)
         )
     }
 
