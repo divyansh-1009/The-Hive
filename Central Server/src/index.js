@@ -16,6 +16,22 @@ app.use('/auth', authRoutes);
 app.use('/mobile/usage', mobileUsageRoutes);
 app.use('/extension/usage', extensionUsageRoutes);
 
+// Global Express error handler – catches anything the route handlers miss
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled Express error:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Prevent the process from crashing on stray errors
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (server still running):', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection (server still running):', reason);
+});
+
 async function start() {
   try {
     await db.query('SELECT 1');
