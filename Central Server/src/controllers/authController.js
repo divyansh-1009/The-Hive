@@ -15,10 +15,10 @@ function generateToken(user) {
 
 exports.signup = async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, occupation } = req.body;
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'email, password, and name are required.' });
+    if (!email || !password || !name || !occupation) {
+      return res.status(400).json({ error: 'email, password, name, and occupation are required.' });
     }
 
     const existing = await User.findByEmail(email);
@@ -27,7 +27,7 @@ exports.signup = async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = await User.create({ email, password: hashed, name });
+    const user = await User.create({ email, password: hashed, name, occupation });
     const token = generateToken(user);
 
     return res.status(201).json({ token, user });

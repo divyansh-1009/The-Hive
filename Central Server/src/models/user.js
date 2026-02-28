@@ -8,6 +8,7 @@ const User = {
         email       VARCHAR(255) UNIQUE NOT NULL,
         password    VARCHAR(255) NOT NULL,
         name        VARCHAR(255) NOT NULL,
+        occupation  VARCHAR(255) NOT NULL,
         created_at  TIMESTAMP DEFAULT NOW()
       );
     `);
@@ -21,12 +22,12 @@ const User = {
     return rows[0] || null;
   },
 
-  async create({ email, password, name }) {
+  async create({ email, password, name, occupation }) {
     const { rows } = await db.query(
-      `INSERT INTO users (email, password, name)
-       VALUES ($1, $2, $3)
-       RETURNING id, email, name, created_at`,
-      [email, password, name],
+      `INSERT INTO users (email, password, name, occupation)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, email, name, occupation, created_at`,
+      [email, password, name, occupation],
     );
     return rows[0];
   },

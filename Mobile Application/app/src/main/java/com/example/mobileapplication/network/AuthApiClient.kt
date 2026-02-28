@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit
 data class AuthRequest(
     val email: String,
     val password: String,
-    val name: String? = null
+    val name: String? = null,
+    val occupation: String? = null
 )
 
 data class AuthResponse(
@@ -38,10 +39,10 @@ object AuthApiClient {
 
     private val gson = Gson()
 
-    fun signup(email: String, password: String, name: String): AuthResponse? {
+    fun signup(email: String, password: String, name: String, occupation: String): AuthResponse? {
         return post(
             "${UsageApiClient.BASE_URL}/auth/signup",
-            AuthRequest(email = email, password = password, name = name)
+            AuthRequest(email = email, password = password, name = name, occupation = occupation)
         )
     }
 
