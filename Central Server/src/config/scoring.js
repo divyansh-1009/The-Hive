@@ -2,8 +2,8 @@
 
 module.exports = {
   // Bayesian skill model defaults
-  INITIAL_MU: 25,
-  INITIAL_SIGMA: 8.33,
+  INITIAL_MU: 12,
+  INITIAL_SIGMA: 6,
   SIGMA_OBS: 5,
 
   // Streak
