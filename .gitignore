@@ -140,6 +140,17 @@ coverage/
 *~
 
 # ============================================
+#  Productivity Tracker – Build Artifacts
+# ============================================
+
+productivity-tracker/dist/
+productivity-tracker/build/
+productivity-tracker/frontend/dist/
+productivity-tracker/frontend/dist_electron/
+productivity-tracker/data/*.db
+productivity-tracker/*.spec
+
+# ============================================
 #  Miscellaneous
 # ============================================
 
