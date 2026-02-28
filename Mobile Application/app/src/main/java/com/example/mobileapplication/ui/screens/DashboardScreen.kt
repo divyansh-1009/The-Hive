@@ -29,6 +29,7 @@ import com.example.mobileapplication.network.UsageApiClient
 import com.example.mobileapplication.ui.theme.*
 import com.example.mobileapplication.usage.UsageStatsHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -84,17 +85,21 @@ fun DashboardScreen(
     var isLoading by remember { mutableStateOf(true) }
     var isSending by remember { mutableStateOf(false) }
 
-    // Fetch all metrics — re-runs whenever the logged-in userId changes
+    // Initial fetch and periodic polling every 30 seconds
     LaunchedEffect(userId) {
-        withContext(Dispatchers.IO) {
-            val r = MetricsApiClient.getRating(context)
-            val s = MetricsApiClient.getScore(context)
-            val d = MetricsApiClient.getDomainRankings(context)
-            rating = r
-            score = s
-            domainRankings = d
+        while (true) {
+            withContext(Dispatchers.IO) {
+                val r = MetricsApiClient.getRating(context)
+                val s = MetricsApiClient.getScore(context)
+                val d = MetricsApiClient.getDomainRankings(context)
+                rating = r
+                score = s
+                domainRankings = d
+            }
+            isLoading = false
+            // Wait 30 seconds before next refresh
+            delay(30000)
         }
-        isLoading = false
     }
 
     Box(
@@ -154,17 +159,22 @@ fun DashboardScreen(
                     // ── 2. Today's Score Card ────────────────────────────────
                     ScoreCard(score)
 
-                    // ── 3. Category Breakdown ────────────────────────────────
+                    // ── 3. Live Activity (Updates every 30s) ──────────────────
+                    if (score?.totals != null && score!!.totals!!.isNotEmpty()) {
+                        LiveActivityCard(score!!)
+                    }
+
+                    // ── 4. Category Breakdown ────────────────────────────────
                     if (score?.totals != null && score!!.totals!!.isNotEmpty()) {
                         CategoryBreakdownCard(score!!)
                     }
 
-                    // ── 4. Domain Rankings ───────────────────────────────────
+                    // ── 5. Domain Rankings ───────────────────────────────────
                     if (domainRankings?.rankings != null && domainRankings!!.rankings!!.isNotEmpty()) {
                         DomainRankingsCard(domainRankings!!)
                     }
 
-                    // ── 5. Actions ───────────────────────────────────────────
+                    // ── 6. Actions ───────────────────────────────────────────
                     ActionsCard(
                         isSending = isSending,
                         onSendReport = {
@@ -316,6 +326,92 @@ private fun ScoreCard(score: ScoreResponse?) {
                 fontSize = 14.sp
             )
         }
+    }
+}
+
+@Composable
+private fun LiveActivityCard(score: ScoreResponse) {
+    val totals = score.totals ?: return
+    val sorted = totals.entries.sortedByDescending { it.value }.take(3)
+
+    if (sorted.isEmpty()) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DarkSurface, RoundedCornerShape(16.dp))
+            .padding(24.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Top Categories (Live)",
+                color = OnDarkMuted,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(YellowGreen, CircleShape)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        sorted.forEachIndexed { index, (category, minutes) ->
+            val label = CATEGORY_LABELS[category] ?: category
+            val color = CATEGORY_COLORS[category] ?: Color.Gray
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "${index + 1}",
+                    color = CyanBlue,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(20.dp)
+                )
+
+                Text(
+                    text = label,
+                    color = OnDark,
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "${minutes.roundToInt()}m",
+                        color = color,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Updates every 30 seconds",
+            color = OnDarkMuted,
+            fontSize = 11.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

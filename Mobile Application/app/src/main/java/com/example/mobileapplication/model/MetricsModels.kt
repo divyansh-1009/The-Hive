@@ -12,6 +12,31 @@ data class ScoreResponse(
 )
 
 /**
+ * Live global stats from WebSocket broadcast
+ */
+data class GlobalLiveStats(
+    val totalActive: Int,
+    val totalIdle: Int,
+    val totalLocked: Int,
+    val categoryBreakdown: Map<String, Int>?,
+    val topSites: List<TopSite>?
+)
+
+data class TopSite(
+    val site: String,
+    val count: Int
+)
+
+/**
+ * Live stats response (polling fallback)
+ */
+data class LiveStatsResponse(
+    val type: String?,
+    val timestamp: Long?,
+    val global: GlobalLiveStats?
+)
+
+/**
  * Response from GET /api/rating
  */
 data class RatingResponse(
