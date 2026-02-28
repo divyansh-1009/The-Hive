@@ -10,15 +10,12 @@ const extensionUsageRoutes = require('./routes/extensionUsage');
 
 const app = express();
 
-// ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json());
 
-// ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
 app.use('/mobile/usage', mobileUsageRoutes);
 app.use('/extension/usage', extensionUsageRoutes);
 
-// ── Start ────────────────────────────────────────────────────────────────────
 async function start() {
   try {
     await db.query('SELECT 1');

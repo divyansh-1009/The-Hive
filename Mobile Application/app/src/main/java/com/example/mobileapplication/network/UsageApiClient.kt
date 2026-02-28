@@ -14,7 +14,6 @@ object UsageApiClient {
 
     private const val TAG = "UsageApiClient"
 
-    // Change this to your actual server URL (e.g. http://192.168.x.x:3000)
     var BASE_URL = "http://10.0.2.2:3000"
 
     private val client = OkHttpClient.Builder()
