@@ -23,14 +23,14 @@ const PERSONA_ROLES = {
 
 // Role-Based Category Weight Matrix
 const WEIGHT_MATRIX = {
-  DEV:     { CS: 1.2, DESIGN: 0.3, BUSINESS: 0.1, GENERAL: 0.6 },
-  CP:      { CS: 1.2, DESIGN: 0.0, BUSINESS: 0.0, GENERAL: 0.5 },
-  DESIGN:  { CS: 0.2, DESIGN: 1.2, BUSINESS: 0.5, GENERAL: 0.6 },
+  DEV:     { CS: 1.2, DESIGN: 0.3, BUSINESS: 0.1, GENERAL: 0.8 },
+  CP:      { CS: 1.2, DESIGN: 0.0, BUSINESS: 0.0, GENERAL: 0.6 },
+  DESIGN:  { CS: 0.2, DESIGN: 1.2, BUSINESS: 0.4, GENERAL: 0.6 },
   WRITING: { CS: 0.4, DESIGN: 0.6, BUSINESS: 1.2, GENERAL: 0.6 },
-  EDU:     { CS: 1.0, DESIGN: 0.8, BUSINESS: 1.0, GENERAL: 0.8 },
+  EDU:     { CS: 1.0, DESIGN: 0.8, BUSINESS: 1.0, GENERAL: 0.6 },
   COMM:    { CS: 0.3, DESIGN: 0.3, BUSINESS: 1.0, GENERAL: 0.4 },
-  SOC:     { CS: -0.6, DESIGN: -0.2, BUSINESS: -0.4, GENERAL: -0.6},
-  ENT:     { CS: -0.8, DESIGN: -0.8, BUSINESS: -0.8, GENERAL: -0.8},
+  SOC:     { CS: -0.6, DESIGN: -0.2, BUSINESS: -0.4, GENERAL: -0.4},
+  ENT:     { CS: -0.8, DESIGN: -0.8, BUSINESS: -0.8, GENERAL: -0.6},
   UNCAT:   { CS: 0.0, DESIGN: 0.0, BUSINESS: 0.0, GENERAL: 0.0 },
 };
 
