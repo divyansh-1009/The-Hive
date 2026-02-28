@@ -4,9 +4,9 @@ const SERVER_URL = "http://localhost:3000";
 const authSection = document.getElementById("auth-section");
 const dashboard = document.getElementById("dashboard");
 const authError = document.getElementById("auth-error");
-const nameInput = document.getElementById("auth-name");
 const emailInput = document.getElementById("auth-email");
 const passwordInput = document.getElementById("auth-password");
+const personaSelect = document.getElementById("auth-persona");
 const btnLogin = document.getElementById("btn-login");
 const btnSignup = document.getElementById("btn-signup");
 const btnLogout = document.getElementById("btn-logout");
@@ -14,9 +14,9 @@ const userLabel = document.getElementById("user-label");
 const siteDisplay = document.getElementById("site-display");
 
 // ── Init ────────────────────────────────────────────────────────────────────
-chrome.storage.local.get(["token", "userName"], (data) => {
+chrome.storage.local.get(["token", "userEmail"], (data) => {
   if (data.token) {
-    showDashboard(data.userName || "User");
+    showDashboard(data.userEmail || "User");
   } else {
     showAuth();
   }
@@ -28,10 +28,10 @@ function showAuth() {
   dashboard.style.display = "none";
 }
 
-function showDashboard(name) {
+function showDashboard(label) {
   authSection.style.display = "none";
   dashboard.style.display = "block";
-  userLabel.textContent = `Logged in as ${name}`;
+  userLabel.textContent = `Logged in as ${label}`;
   loadCurrentState();
 }
 
@@ -48,7 +48,7 @@ btnLogin.addEventListener("click", async () => {
   if (!email || !password) return showError("Email and password required.");
 
   try {
-    const res = await fetch(`${SERVER_URL}/auth/login`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -57,8 +57,8 @@ btnLogin.addEventListener("click", async () => {
     if (!res.ok) return showError(data.error || "Login failed.");
 
     chrome.storage.local.set(
-      { token: data.token, userName: data.user.name },
-      () => showDashboard(data.user.name)
+      { token: data.token, userEmail: email },
+      () => showDashboard(email)
     );
   } catch {
     showError("Cannot reach server.");
@@ -67,25 +67,36 @@ btnLogin.addEventListener("click", async () => {
 
 btnSignup.addEventListener("click", async () => {
   authError.style.display = "none";
-  const name = nameInput.value.trim();
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
+  const personaRole = personaSelect.value;
 
-  if (!name || !email || !password)
-    return showError("Name, email, and password required.");
+  if (!email || !password)
+    return showError("Email and password required.");
+
+  // Get or create deviceId from background
+  const { deviceId } = await chrome.storage.local.get(["deviceId"]);
+  const id = deviceId || crypto.randomUUID();
+  if (!deviceId) await chrome.storage.local.set({ deviceId: id });
 
   try {
-    const res = await fetch(`${SERVER_URL}/auth/signup`, {
+    const res = await fetch(`${SERVER_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({
+        email,
+        password,
+        deviceId: id,
+        deviceType: "chrome",
+        personaRole,
+      }),
     });
     const data = await res.json();
     if (!res.ok) return showError(data.error || "Signup failed.");
 
     chrome.storage.local.set(
-      { token: data.token, userName: data.user.name },
-      () => showDashboard(data.user.name)
+      { token: data.token, userEmail: email },
+      () => showDashboard(email)
     );
   } catch {
     showError("Cannot reach server.");
@@ -93,7 +104,7 @@ btnSignup.addEventListener("click", async () => {
 });
 
 btnLogout.addEventListener("click", () => {
-  chrome.storage.local.remove(["token", "userName"], () => showAuth());
+  chrome.storage.local.remove(["token", "userEmail"], () => showAuth());
 });
 
 // ── Current state display ───────────────────────────────────────────────────

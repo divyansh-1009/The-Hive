@@ -8,12 +8,12 @@ const { generateToken } = require("../middleware/auth");
 const { PERSONA_ROLES } = require("../config/categories");
 
 // POST /api/auth/register
-// Body: { email, password, deviceId, deviceType, personaRole }
+// Body: { name, email, password, deviceId, deviceType, personaRole }
 async function register(req, res) {
   try {
-    const { email, password, deviceId, deviceType, personaRole } = req.body;
+    const { name, email, password, deviceId, deviceType, personaRole } = req.body;
 
-    if (!email || !password || !deviceId || !deviceType) {
+    if (!name || !email || !password || !deviceId || !deviceType) {
       return res.status(400).json({ error: "All fields required" });
     }
 
@@ -27,7 +27,7 @@ async function register(req, res) {
 
     const userId = randomUUID();
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create(userId, email, passwordHash, role);
+    const user = await User.create(userId, name, email, passwordHash, role);
 
     await Device.link(deviceId, userId, deviceType);
 

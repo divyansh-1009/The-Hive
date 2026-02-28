@@ -214,6 +214,7 @@ async function getLeaderboard(req, res) {
     const users = await User.getAll();
     const leaderboard = users.map((u, idx) => ({
       rank: idx + 1,
+      name: u.name || "Anonymous",
       displayRating: u.display_rating,
       tier: u.tier,
       streak: u.streak,

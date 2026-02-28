@@ -118,9 +118,14 @@
 
     <!-- Auth -->
     <div id="auth-section">
-      <input id="auth-name" type="text" placeholder="Name (signup only)" />
       <input id="auth-email" type="email" placeholder="Email" />
       <input id="auth-password" type="password" placeholder="Password" />
+      <select id="auth-persona" style="width:100%;padding:8px 10px;margin-bottom:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
+        <option value="GENERAL">General</option>
+        <option value="CS">Computer Science</option>
+        <option value="DESIGN">Design</option>
+        <option value="BUSINESS">Business</option>
+      </select>
       <div class="btn-row">
         <button id="btn-login">Log In</button>
         <button id="btn-signup">Sign Up</button>

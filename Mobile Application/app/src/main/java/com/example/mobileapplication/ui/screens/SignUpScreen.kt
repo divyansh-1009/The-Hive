@@ -1,6 +1,8 @@
 package com.example.mobileapplication.ui.screens
 
+import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -62,6 +66,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private val PERSONA_OPTIONS = listOf(
+    "CS" to "Computer Science",
+    "DESIGN" to "Design",
+    "BUSINESS" to "Business",
+    "GENERAL" to "General"
+)
+
 @Composable
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
@@ -73,13 +84,16 @@ fun SignUpScreen(
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var occupation by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var selectedPersona by remember { mutableStateOf("GENERAL") }
+    var personaExpanded by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val personaLabel = PERSONA_OPTIONS.first { it.first == selectedPersona }.second
 
     Box(
         modifier = Modifier
@@ -147,21 +161,7 @@ fun SignUpScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = signupFieldColors(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                OutlinedTextField(
-                    value = occupation,
-                    onValueChange = { occupation = it; errorMessage = null },
-                    label = { Text("Occupation", color = OnDarkMuted, fontSize = 13.sp) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = signupFieldColors(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
 
@@ -178,6 +178,45 @@ fun SignUpScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Persona role dropdown
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = personaLabel,
+                        onValueChange = {},
+                        label = { Text("Persona Role", color = OnDarkMuted, fontSize = 13.sp) },
+                        readOnly = true,
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { personaExpanded = true },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = signupFieldColors(),
+                        trailingIcon = {
+                            Text(
+                                "\u25BC", color = OnDarkMuted, fontSize = 12.sp,
+                                modifier = Modifier.clickable { personaExpanded = true }
+                            )
+                        }
+                    )
+                    DropdownMenu(
+                        expanded = personaExpanded,
+                        onDismissRequest = { personaExpanded = false },
+                        modifier = Modifier.background(DarkNavbar)
+                    ) {
+                        PERSONA_OPTIONS.forEach { (key, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label, color = OnDark, fontSize = 14.sp) },
+                                onClick = {
+                                    selectedPersona = key
+                                    personaExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -236,7 +275,6 @@ fun SignUpScreen(
                     onClick = {
                         when {
                             name.isBlank() -> { errorMessage = "Please enter your name"; return@Button }
-                            occupation.isBlank() -> { errorMessage = "Please enter your occupation"; return@Button }
                             email.isBlank() -> { errorMessage = "Please enter your email"; return@Button }
                             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                                 errorMessage = "Please enter a valid email"; return@Button
@@ -248,13 +286,18 @@ fun SignUpScreen(
                         errorMessage = null
                         scope.launch {
                             val response = withContext(Dispatchers.IO) {
-                                AuthApiClient.signup(email.trim(), password, name.trim(), occupation.trim())
+                                val deviceId = Settings.Secure.getString(
+                                    context.contentResolver,
+                                    Settings.Secure.ANDROID_ID
+                                ) ?: "unknown"
+                                AuthApiClient.register(name.trim(), email.trim(), password, deviceId, selectedPersona)
                             }
                             isLoading = false
                             when {
                                 response == null -> errorMessage = "Connection failed. Check your network."
                                 response.token != null -> {
                                     TokenManager.saveToken(context, response.token)
+                                    response.userId?.let { TokenManager.saveUserId(context, it) }
                                     onSignUpSuccess()
                                 }
                                 response.error != null -> errorMessage = response.error

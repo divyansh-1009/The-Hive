@@ -37,7 +37,7 @@ async function sendEvent(site, state) {
   const id = await getOrCreateDeviceId();
 
   try {
-    await fetch(`${SERVER_URL}/extension/usage`, {
+    await fetch(`${SERVER_URL}/api/activity/chrome`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

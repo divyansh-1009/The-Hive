@@ -17,7 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.mobileapplication.network.TokenManager
-import com.example.mobileapplication.ui.screens.HomeScreen
+import com.example.mobileapplication.ui.screens.DashboardScreen
+import com.example.mobileapplication.ui.screens.LeaderboardScreen
 import com.example.mobileapplication.ui.screens.LoginScreen
 import com.example.mobileapplication.ui.screens.PermissionScreen
 import com.example.mobileapplication.ui.screens.SignUpScreen
@@ -29,7 +30,7 @@ import com.example.mobileapplication.worker.UsageTrackingWorker
  * Screens in the app's navigation flow.
  */
 enum class Screen {
-    LOGIN, SIGNUP, PERMISSION, HOME
+    LOGIN, SIGNUP, PERMISSION, HOME, LEADERBOARD
 }
 
 class MainActivity : ComponentActivity() {
@@ -116,16 +117,21 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 currentScreen = Screen.HOME
             },
             onLogout = {
-                TokenManager.clearToken(context)
+                TokenManager.clearAll(context)
                 currentScreen = Screen.LOGIN
             }
         )
 
-        Screen.HOME -> HomeScreen(
+        Screen.HOME -> DashboardScreen(
             onLogout = {
-                TokenManager.clearToken(context)
+                TokenManager.clearAll(context)
                 currentScreen = Screen.LOGIN
-            }
+            },
+            onNavigateToLeaderboard = { currentScreen = Screen.LEADERBOARD }
+        )
+
+        Screen.LEADERBOARD -> LeaderboardScreen(
+            onBack = { currentScreen = Screen.HOME }
         )
     }
 }

@@ -36,7 +36,7 @@ object UsageApiClient {
 
         val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
         val request = Request.Builder()
-            .url("$BASE_URL/mobile/usage")
+            .url("$BASE_URL/api/activity/mobile")
             .addHeader("Authorization", "Bearer $token")
             .post(body)
             .build()

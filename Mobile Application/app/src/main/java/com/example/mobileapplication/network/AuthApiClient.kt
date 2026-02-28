@@ -8,23 +8,25 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-data class AuthRequest(
+data class RegisterRequest(
+    val name: String,
     val email: String,
     val password: String,
-    val name: String? = null,
-    val occupation: String? = null
+    val deviceId: String,
+    val deviceType: String = "mobile",
+    val personaRole: String = "GENERAL"
+)
+
+data class LoginRequest(
+    val email: String,
+    val password: String
 )
 
 data class AuthResponse(
+    val userId: String?,
     val token: String?,
-    val user: AuthUser?,
+    val personaRole: String?,
     val error: String?
-)
-
-data class AuthUser(
-    val id: Int,
-    val email: String,
-    val name: String
 )
 
 object AuthApiClient {
@@ -39,17 +41,17 @@ object AuthApiClient {
 
     private val gson = Gson()
 
-    fun signup(email: String, password: String, name: String, occupation: String): AuthResponse? {
+    fun register(name: String, email: String, password: String, deviceId: String, personaRole: String): AuthResponse? {
         return post(
-            "${UsageApiClient.BASE_URL}/auth/signup",
-            AuthRequest(email = email, password = password, name = name, occupation = occupation)
+            "${UsageApiClient.BASE_URL}/api/auth/register",
+            RegisterRequest(name = name, email = email, password = password, deviceId = deviceId, personaRole = personaRole)
         )
     }
 
     fun login(email: String, password: String): AuthResponse? {
         return post(
-            "${UsageApiClient.BASE_URL}/auth/login",
-            AuthRequest(email = email, password = password)
+            "${UsageApiClient.BASE_URL}/api/auth/login",
+            LoginRequest(email = email, password = password)
         )
     }
 

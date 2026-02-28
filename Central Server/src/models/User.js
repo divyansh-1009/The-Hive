@@ -4,12 +4,12 @@ const db = require("../config/db");
 const { INITIAL_MU, INITIAL_SIGMA } = require("../config/scoring");
 
 const User = {
-  async create(userId, email, passwordHash, personaRole = "GENERAL") {
+  async create(userId, name, email, passwordHash, personaRole = "GENERAL") {
     const res = await db.query(
-      `INSERT INTO users (user_id, email, password_hash, mu, sigma, persona_role, streak, tier)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, 'BRONZE')
+      `INSERT INTO users (user_id, name, email, password_hash, mu, sigma, persona_role, streak, tier)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 'BRONZE')
        RETURNING *`,
-      [userId, email, passwordHash, INITIAL_MU, INITIAL_SIGMA, personaRole]
+      [userId, name, email, passwordHash, INITIAL_MU, INITIAL_SIGMA, personaRole]
     );
     return res.rows[0];
   },

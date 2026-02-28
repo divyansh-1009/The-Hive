@@ -1,6 +1,8 @@
 // index.js
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+
 const express = require("express");
 const http = require("http");
 const cron = require("node-cron");
@@ -16,6 +18,14 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
+// --- Global error handlers ---
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -25,6 +35,12 @@ app.use("/api", routes);
 
 // Health check
 app.get("/health", (req, res) => res.json({ status: "ok" }));
+
+// Global Express error handler
+app.use((err, _req, res, _next) => {
+  console.error("Express error:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
 
 // Initialize WebSocket for live stats
 initWebSocket(server);
@@ -41,8 +57,6 @@ cron.schedule(EOD_CRON, async () => {
 
 // Start server and seed embeddings
 async function start() {
-  // Seed embeddings on first run (loads model + embeds known apps)
-  // This takes ~30-60 seconds on first run as it downloads the model
   try {
     await seedEmbeddings();
   } catch (err) {

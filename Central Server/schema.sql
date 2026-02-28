@@ -13,6 +13,7 @@ CREATE EXTENSION IF NOT EXISTS "vector";
 -- ============================================================
 CREATE TABLE users (
     user_id        UUID PRIMARY KEY,
+    name           VARCHAR(100) NOT NULL,
     email          VARCHAR(255) UNIQUE NOT NULL,
     password_hash  TEXT NOT NULL,
     persona_role   VARCHAR(20) NOT NULL DEFAULT 'GENERAL',

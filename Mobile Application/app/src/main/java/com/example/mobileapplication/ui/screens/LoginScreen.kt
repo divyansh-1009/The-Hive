@@ -215,6 +215,7 @@ fun LoginScreen(
                                 response == null -> errorMessage = "Connection failed. Check your network."
                                 response.token != null -> {
                                     TokenManager.saveToken(context, response.token)
+                                    response.userId?.let { TokenManager.saveUserId(context, it) }
                                     onLoginSuccess()
                                 }
                                 response.error != null -> errorMessage = response.error
