@@ -9,9 +9,11 @@ module.exports = {
   // Streak
   T_MIN: 60, // minutes of positive-weight activity needed per day
 
+  // Minimum session duration (seconds) — Chrome sessions shorter than this are discarded
+  MIN_SESSION_SECONDS: 60,
+
   // Idle detection
   IDLE_DETECTION_SECONDS: 300, // 5 minutes — extension uses chrome.idle API
-  // Extension checks every 30s and sends idleState with each event
 
   // Tier percentile boundaries
   TIERS: {
@@ -30,5 +32,5 @@ module.exports = {
 
   // Embedding model
   EMBEDDING_MODEL: "Xenova/bge-small-en-v1.5",
-  EMBEDDING_DIMENSION: 384, // output dimension of bge-small-en-v1.5
+  EMBEDDING_DIMENSION: 384,
 };

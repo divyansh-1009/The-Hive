@@ -5,6 +5,7 @@ const Device = require("../models/Device");
 const Activity = require("../models/Activity");
 const { broadcastUpdate } = require("./liveController");
 const { categorize } = require("./embeddingController");
+const { MIN_SESSION_SECONDS } = require("../config/scoring");
 
 /**
  * Resolve category for an app/site using the embedding pipeline
@@ -29,12 +30,13 @@ function computeSessionDuration(session, closeTimestamp) {
 }
 
 /**
- * Finalize a session and accumulate into daily activity
+ * Finalize a session and accumulate into daily activity.
+ * Sessions shorter than MIN_SESSION_SECONDS are silently discarded.
  */
 async function finalizeSession(session, closeTimestamp) {
   const durationMs = computeSessionDuration(session, closeTimestamp);
 
-  if (durationMs <= 0) return null;
+  if (durationMs < MIN_SESSION_SECONDS * 1000) return null;
 
   const durationMinutes = durationMs / 60000;
   const category = await resolveCategory(session.site, "chrome");
