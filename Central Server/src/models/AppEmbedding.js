@@ -5,17 +5,32 @@ const db = require("../config/db");
 const AppEmbedding = {
   /**
    * Insert an app/site with its embedding and category
-   * source: 'seed', 'auto', 'manual'
+   * source: 'seed', 'auto', 'manual', 'label'
+   * Never overwrites 'seed' or 'manual' entries with 'auto'
    */
   async upsert(appOrSite, category, embedding, source) {
     const vecStr = `[${embedding.join(",")}]`;
-    await db.query(
-      `INSERT INTO app_embeddings (app_or_site, category, embedding, source)
-       VALUES ($1, $2, $3::vector, $4)
-       ON CONFLICT (app_or_site)
-       DO UPDATE SET category = $2, embedding = $3::vector, source = $4`,
-      [appOrSite, category, vecStr, source]
-    );
+
+    if (source === "auto") {
+      // Only insert if not exists, or update if existing source is also 'auto'
+      await db.query(
+        `INSERT INTO app_embeddings (app_or_site, category, embedding, source)
+         VALUES ($1, $2, $3::vector, $4)
+         ON CONFLICT (app_or_site) DO UPDATE
+           SET category = $2, embedding = $3::vector, source = $4
+           WHERE app_embeddings.source = 'auto'`,
+        [appOrSite, category, vecStr, source]
+      );
+    } else {
+      // seed, manual, label — always overwrite
+      await db.query(
+        `INSERT INTO app_embeddings (app_or_site, category, embedding, source)
+         VALUES ($1, $2, $3::vector, $4)
+         ON CONFLICT (app_or_site)
+         DO UPDATE SET category = $2, embedding = $3::vector, source = $4`,
+        [appOrSite, category, vecStr, source]
+      );
+    }
   },
 
   /**
