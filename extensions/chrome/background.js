@@ -1,7 +1,9 @@
 const SERVER_URL = "http://localhost:3000";
+const IDLE_THRESHOLD_SECONDS = 300; // 5 minutes
 
 let deviceId = null;
 let activeSite = null; // { site, tabId }
+let userIdleState = "ACTIVE"; // ACTIVE, IDLE, or LOCKED
 
 // ── Device ID ────────────────────────────────────────────────────────────────
 async function getOrCreateDeviceId() {
@@ -29,6 +31,17 @@ function isTrackable(url) {
   return url && (url.startsWith("http://") || url.startsWith("https://"));
 }
 
+// ── Idle State Tracking ──────────────────────────────────────────────────────
+async function updateIdleState() {
+  chrome.idle.queryState(IDLE_THRESHOLD_SECONDS, (state) => {
+    userIdleState = state; // "ACTIVE", "IDLE", or "LOCKED"
+  });
+}
+
+// Start idle detection every 30 seconds
+setInterval(updateIdleState, 30000);
+updateIdleState(); // Initial check on startup
+
 // ── Send event to server ────────────────────────────────────────────────────
 async function sendEvent(site, state) {
   const { token } = await chrome.storage.local.get(["token"]);
@@ -47,6 +60,7 @@ async function sendEvent(site, state) {
         deviceId: id,
         site,
         state,
+        idleState: userIdleState,
         timestamp: Date.now(),
       }),
     });
@@ -115,7 +129,10 @@ chrome.runtime.onInstalled.addListener(() => getOrCreateDeviceId());
 // ── Message handler (popup asks for current state) ──────────────────────────
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.action === "getState") {
-    sendResponse({ activeSite: activeSite ? activeSite.site : null });
+    sendResponse({ 
+      activeSite: activeSite ? activeSite.site : null,
+      idleState: userIdleState
+    });
   }
   return false;
 });

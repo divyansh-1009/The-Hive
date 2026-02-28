@@ -6,7 +6,8 @@
   "permissions": [
     "tabs",
     "activeWindow",
-    "storage"
+    "storage",
+    "idle"
   ],
   "host_permissions": [
     "http://localhost:3000/*"
