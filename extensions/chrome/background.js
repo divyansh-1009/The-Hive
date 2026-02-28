@@ -1,4 +1,4 @@
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "https://the-hive-uqio.onrender.com";
 const IDLE_THRESHOLD_SECONDS = 300; // 5 minutes
 
 let deviceId = null;

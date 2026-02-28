@@ -14,7 +14,7 @@ object UsageApiClient {
 
     private const val TAG = "UsageApiClient"
 
-    var BASE_URL = "http://10.0.2.2:3000"
+    var BASE_URL = "https://the-hive-uqio.onrender.com"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
