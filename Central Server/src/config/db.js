@@ -1,20 +1,13 @@
-const { Pool } = require('pg');
-const config = require('./index');
+// config/db.js
+
+const { Pool } = require("pg");
 
 const pool = new Pool({
-  ...config.db,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  allowExitOnIdle: false,       // keep the process alive even when pool is idle
-  keepAlive: true,              // enable TCP keep-alive on connections
+  host: process.env.DB_HOST || "localhost",
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || "thehive",
+  user: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "password",
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL pool error (non-fatal):', err.message);
-});
-
-module.exports = {
-  query: (text, params) => pool.query(text, params),
-  pool,
-};
+module.exports = pool;

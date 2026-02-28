@@ -1,56 +1,45 @@
-const express = require('express');
-const config = require('./config');
-const db = require('./config/db');
-const User = require('./models/user');
-const UsageReport = require('./models/usageReport');
-const ExtensionUsage = require('./models/extensionUsage');
-const authRoutes = require('./routes/auth');
-const mobileUsageRoutes = require('./routes/mobileUsage');
-const extensionUsageRoutes = require('./routes/extensionUsage');
+// index.js
+
+require("dotenv").config();
+const express = require("express");
+const http = require("http");
+const cron = require("node-cron");
+const cors = require("cors");
+
+const routes = require("./routes");
+const { runEndOfDay } = require("./controllers/rating");
+const { initWebSocket } = require("./controllers/liveController");
+const { EOD_CRON } = require("./config/scoring");
 
 const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || 3000;
 
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-app.use('/mobile/usage', mobileUsageRoutes);
-app.use('/extension/usage', extensionUsageRoutes);
+// Routes
+app.use("/api", routes);
 
-// Global Express error handler – catches anything the route handlers miss
-app.use((err, _req, res, _next) => {
-  console.error('Unhandled Express error:', err);
-  if (!res.headersSent) {
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
+// Health check
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-// Prevent the process from crashing on stray errors
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception (server still running):', err);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled rejection (server still running):', reason);
-});
+// Initialize WebSocket for live stats
+initWebSocket(server);
 
-async function start() {
+// Schedule EOD Bayesian update at midnight
+cron.schedule(EOD_CRON, async () => {
+  console.log("Running end-of-day scoring job...");
   try {
-    await db.query('SELECT 1');
-    console.log('Connected to PostgreSQL.');
-
-    await User.createTable();
-    await UsageReport.createTable();
-    await ExtensionUsage.createTable();
-    console.log('Database tables ready.');
-
-    app.listen(config.port, () => {
-      console.log(`Central Server listening on port ${config.port}`);
-    });
+    await runEndOfDay();
   } catch (err) {
-    console.error('Failed to start server:', err.message);
-    process.exit(1);
+    console.error("EOD job failed:", err);
   }
-}
+});
 
-start();
-
-module.exports = app;
+// Use server.listen instead of app.listen so WebSocket shares the same port
+server.listen(PORT, () => {
+  console.log(`The Hive server running on port ${PORT}`);
+  console.log(`WebSocket available at ws://localhost:${PORT}/ws/live`);
+});
