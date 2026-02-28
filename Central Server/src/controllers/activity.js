@@ -3,10 +3,19 @@
 const Session = require("../models/Session");
 const Device = require("../models/Device");
 const Activity = require("../models/Activity");
-const UncategorizedQueue = require("../models/UncategorizedQueue");
-const { getCategory } = require("../config/categories");
 const { STALE_SESSION_THRESHOLD_MS } = require("../config/scoring");
 const { broadcastUpdate } = require("./liveController");
+const { categorize } = require("./embeddingController");
+
+/**
+ * Resolve category for an app/site using the embedding pipeline
+ * Returns category string or "UNCAT"
+ */
+async function resolveCategory(appOrSite, source) {
+  const result = await categorize(appOrSite, source);
+  // If below threshold, categorize returned null → use UNCAT
+  return result.category || "UNCAT";
+}
 
 // Helper: finalize a session and accumulate into daily activity
 async function finalizeSession(session, closeTimestamp) {
@@ -16,16 +25,11 @@ async function finalizeSession(session, closeTimestamp) {
   if (durationMs > STALE_SESSION_THRESHOLD_MS || durationMs <= 0) return null;
 
   const durationMinutes = durationMs / 60000;
-  const category = getCategory(session.site);
+  const category = await resolveCategory(session.site, "chrome");
   const date = new Date(session.timestamp).toISOString().split("T")[0];
 
-  if (!category) {
-    await UncategorizedQueue.add(session.site, "chrome");
-    return { site: session.site, durationMinutes, category: null, queued: true };
-  }
-
   await Activity.addCategoryTime(session.userId, date, category, durationMinutes);
-  return { site: session.site, durationMinutes, category, queued: false };
+  return { site: session.site, durationMinutes, category };
 }
 
 // POST /api/activity/chrome
@@ -46,15 +50,11 @@ async function handleChromeEvent(req, res) {
     let finalized = null;
 
     if (state === "active") {
-      // Check if there's an existing active session → implicitly close it
       const existing = Session.get(deviceId);
       if (existing) {
         finalized = await finalizeSession(existing, timestamp);
       }
-      // Store the new active session
       Session.set(deviceId, { userId, site, timestamp });
-
-      // Broadcast live update — new session started
       broadcastUpdate();
 
     } else if (state === "closed") {
@@ -64,8 +64,6 @@ async function handleChromeEvent(req, res) {
       }
       finalized = await finalizeSession(existing, timestamp);
       Session.remove(deviceId);
-
-      // Broadcast live update — session ended
       broadcastUpdate();
 
     } else {
@@ -103,16 +101,10 @@ async function handleMobileSync(req, res) {
     for (const app of apps) {
       const { appName, durationMs } = app;
       const durationMinutes = durationMs / 60000;
-      const category = getCategory(appName);
-
-      if (!category) {
-        await UncategorizedQueue.add(appName, "mobile");
-        results.push({ appName, durationMinutes, category: null, queued: true });
-        continue;
-      }
+      const category = await resolveCategory(appName, "mobile");
 
       await Activity.addCategoryTime(userId, date, category, durationMinutes);
-      results.push({ appName, durationMinutes, category, queued: false });
+      results.push({ appName, durationMinutes, category });
     }
 
     return res.status(200).json({ message: "Mobile sync processed", results });

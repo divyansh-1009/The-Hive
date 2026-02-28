@@ -21,7 +21,6 @@ const Activity = {
        WHERE user_id = $1 AND date = $2`,
       [userId, date]
     );
-    // Return as { CP: 95, DEV: 140, ... }
     const totals = {};
     for (const row of res.rows) {
       totals[row.category] = parseFloat(row.total_minutes);
@@ -45,6 +44,19 @@ const Activity = {
        WHERE date = $1 AND category = $2
        ORDER BY total_minutes ASC`,
       [date, category]
+    );
+    return res.rows;
+  },
+
+  // Get category scores filtered by persona role (for within-persona percentile)
+  async getCategoryScoresByPersona(date, category, personaRole) {
+    const res = await db.query(
+      `SELECT da.user_id, da.total_minutes
+       FROM daily_activity da
+       JOIN users u ON u.user_id = da.user_id
+       WHERE da.date = $1 AND da.category = $2 AND u.persona_role = $3
+       ORDER BY da.total_minutes ASC`,
+      [date, category, personaRole]
     );
     return res.rows;
   },

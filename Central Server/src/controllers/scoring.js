@@ -1,7 +1,8 @@
-// controllers/scoringController.js
+// controllers/scoring.js
 
 const Activity = require("../models/Activity");
-const { CATEGORY_WEIGHTS, POSITIVE_CATEGORIES } = require("../config/categories");
+const User = require("../models/User");
+const { getWeight, getPositiveCategories } = require("../config/categories");
 
 /**
  * Compute X(i,c) = ln(1 + A(i,c)) for each category
@@ -11,36 +12,38 @@ const { CATEGORY_WEIGHTS, POSITIVE_CATEGORIES } = require("../config/categories"
 function computeLogScaled(totals) {
   const logScaled = {};
   for (const [category, minutes] of Object.entries(totals)) {
-    logScaled[category] = Math.log(1 + minutes); // natural log
+    logScaled[category] = Math.log(1 + minutes);
   }
   return logScaled;
 }
 
 /**
- * Compute weighted daily score: X(i) = Σ w(c) · X(i,c)
+ * Compute weighted daily score: X(i) = Σ w(c, role) · X(i,c)
+ * Now persona-aware — uses the weight matrix column for the user's role
  * @param {Object} logScaled - { CP: 4.56, DEV: 4.95, ... }
+ * @param {string} personaRole - 'CS', 'DESIGN', 'BUSINESS', 'GENERAL'
  * @returns {number} weighted score
  */
-function computeWeightedScore(logScaled) {
+function computeWeightedScore(logScaled, personaRole) {
   let score = 0;
   for (const [category, value] of Object.entries(logScaled)) {
-    const weight = CATEGORY_WEIGHTS[category];
-    if (weight !== undefined) {
-      score += weight * value;
-    }
+    score += getWeight(category, personaRole) * value;
   }
   return score;
 }
 
 /**
- * Check streak condition: Σ A(i,c) >= T_min for c ∈ C⁺
+ * Check streak condition: Σ A(i,c) >= T_min for c ∈ C⁺(role)
+ * Positive categories depend on the user's persona role
  * @param {Object} totals - { CP: 95, DEV: 140, ... }
  * @param {number} tMin - minimum productive minutes
+ * @param {string} personaRole
  * @returns {boolean}
  */
-function checkStreakCondition(totals, tMin) {
+function checkStreakCondition(totals, tMin, personaRole) {
+  const positiveCategories = getPositiveCategories(personaRole);
   let productiveMinutes = 0;
-  for (const category of POSITIVE_CATEGORIES) {
+  for (const category of positiveCategories) {
     productiveMinutes += totals[category] || 0;
   }
   return productiveMinutes >= tMin;
@@ -51,12 +54,15 @@ function checkStreakCondition(totals, tMin) {
  * Returns { totals, logScaled, weightedScore, streakMet }
  */
 async function computeUserDailyScore(userId, date, tMin) {
+  const user = await User.findById(userId);
+  const personaRole = user?.persona_role || "GENERAL";
+
   const totals = await Activity.getDailyTotals(userId, date);
   const logScaled = computeLogScaled(totals);
-  const weightedScore = computeWeightedScore(logScaled);
-  const streakMet = checkStreakCondition(totals, tMin);
+  const weightedScore = computeWeightedScore(logScaled, personaRole);
+  const streakMet = checkStreakCondition(totals, tMin, personaRole);
 
-  return { totals, logScaled, weightedScore, streakMet };
+  return { totals, logScaled, weightedScore, streakMet, personaRole };
 }
 
 // GET /api/score — returns current day's score for the authenticated user

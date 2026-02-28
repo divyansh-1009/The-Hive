@@ -1,35 +1,38 @@
 // controllers/authController.js
 
 const bcrypt = require("bcrypt");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 const User = require("../models/User");
 const Device = require("../models/Device");
 const { generateToken } = require("../middleware/auth");
+const { PERSONA_ROLES } = require("../config/categories");
 
 // POST /api/auth/register
-// Body: { email, password, deviceId, deviceType }
+// Body: { email, password, deviceId, deviceType, personaRole }
 async function register(req, res) {
   try {
-    const { email, password, deviceId, deviceType } = req.body;
+    const { email, password, deviceId, deviceType, personaRole } = req.body;
 
     if (!email || !password || !deviceId || !deviceType) {
       return res.status(400).json({ error: "All fields required" });
     }
+
+    // Validate persona role, default to GENERAL
+    const role = PERSONA_ROLES[personaRole] || "GENERAL";
 
     const existing = await User.findByEmail(email);
     if (existing) {
       return res.status(409).json({ error: "Email already registered" });
     }
 
-    const userId = uuidv4();
+    const userId = randomUUID();
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create(userId, email, passwordHash);
+    const user = await User.create(userId, email, passwordHash, role);
 
-    // Link the device to this user
     await Device.link(deviceId, userId, deviceType);
 
     const token = generateToken(userId);
-    return res.status(201).json({ userId, token });
+    return res.status(201).json({ userId, token, personaRole: role });
   } catch (err) {
     console.error("Register error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -49,7 +52,11 @@ async function login(req, res) {
     if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = generateToken(user.user_id);
-    return res.status(200).json({ userId: user.user_id, token });
+    return res.status(200).json({
+      userId: user.user_id,
+      token,
+      personaRole: user.persona_role,
+    });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -73,4 +80,25 @@ async function linkDevice(req, res) {
   }
 }
 
-module.exports = { register, login, linkDevice };
+// PATCH /api/auth/persona
+// Body: { personaRole }
+async function updatePersona(req, res) {
+  try {
+    const { personaRole } = req.body;
+
+    if (!PERSONA_ROLES[personaRole]) {
+      return res.status(400).json({
+        error: "Invalid persona role",
+        valid: Object.keys(PERSONA_ROLES),
+      });
+    }
+
+    await User.updatePersona(req.userId, personaRole);
+    return res.status(200).json({ message: "Persona updated", personaRole });
+  } catch (err) {
+    console.error("Update persona error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+module.exports = { register, login, linkDevice, updatePersona };

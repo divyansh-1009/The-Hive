@@ -2,25 +2,32 @@
 
 module.exports = {
   // Bayesian skill model defaults
-  INITIAL_MU: 25,          // µ₀ — starting skill estimate
-  INITIAL_SIGMA: 8.33,     // σ₀ — starting uncertainty (≈25/3)
-  SIGMA_OBS: 5,            // σ_obs — global daily performance noise
+  INITIAL_MU: 25,
+  INITIAL_SIGMA: 8.33,
+  SIGMA_OBS: 5,
 
   // Streak
-  T_MIN: 60,               // Minimum productive minutes per day for streak
+  T_MIN: 60, // minutes of positive-weight activity needed per day
 
   // Session management
-  STALE_SESSION_THRESHOLD_MS: 30 * 60 * 1000, // 30 minutes — discard if no close
+  STALE_SESSION_THRESHOLD_MS: 30 * 60 * 1000, // 30 minutes
 
   // Tier percentile boundaries
   TIERS: {
-    DIAMOND:  0.95,
+    DIAMOND: 0.95,
     PLATINUM: 0.85,
-    GOLD:     0.65,
-    SILVER:   0.40,
-    BRONZE:   0.00,
+    GOLD: 0.65,
+    SILVER: 0.40,
+    BRONZE: 0.00,
   },
 
   // EOD cron schedule (midnight)
   EOD_CRON: "0 0 * * *",
+
+  // Embedding similarity threshold
+  SIMILARITY_THRESHOLD: 0.5,
+
+  // Embedding model
+  EMBEDDING_MODEL: "Xenova/all-MiniLM-L6-v2",
+  EMBEDDING_DIMENSION: 384, // output dimension of all-MiniLM-L6-v2
 };

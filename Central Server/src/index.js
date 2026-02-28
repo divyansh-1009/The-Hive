@@ -9,6 +9,7 @@ const cors = require("cors");
 const routes = require("./routes");
 const { runEndOfDay } = require("./controllers/rating");
 const { initWebSocket } = require("./controllers/liveController");
+const { seedEmbeddings } = require("./controllers/embeddingController");
 const { EOD_CRON } = require("./config/scoring");
 
 const app = express();
@@ -38,8 +39,21 @@ cron.schedule(EOD_CRON, async () => {
   }
 });
 
-// Use server.listen instead of app.listen so WebSocket shares the same port
-server.listen(PORT, () => {
-  console.log(`The Hive server running on port ${PORT}`);
-  console.log(`WebSocket available at ws://localhost:${PORT}/ws/live`);
-});
+// Start server and seed embeddings
+async function start() {
+  // Seed embeddings on first run (loads model + embeds known apps)
+  // This takes ~30-60 seconds on first run as it downloads the model
+  try {
+    await seedEmbeddings();
+  } catch (err) {
+    console.error("Failed to seed embeddings:", err);
+    console.log("Server will start but embedding-based categorization may not work.");
+  }
+
+  server.listen(PORT, () => {
+    console.log(`The Hive server running on port ${PORT}`);
+    console.log(`WebSocket available at ws://localhost:${PORT}/ws/live`);
+  });
+}
+
+start();
