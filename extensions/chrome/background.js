@@ -126,13 +126,16 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
 chrome.runtime.onStartup.addListener(() => getOrCreateDeviceId());
 chrome.runtime.onInstalled.addListener(() => getOrCreateDeviceId());
 
-// ── Message handler (popup asks for current state) ──────────────────────────
+// ── Message handler (popup asks for current state or deviceId) ──────────────
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.action === "getState") {
     sendResponse({ 
       activeSite: activeSite ? activeSite.site : null,
       idleState: userIdleState
     });
+  } else if (msg.action === "getDeviceId") {
+    getOrCreateDeviceId().then((id) => sendResponse({ deviceId: id }));
+    return true; // keep channel open for async response
   }
   return false;
 });

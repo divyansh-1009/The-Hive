@@ -24,10 +24,7 @@
       }
 
       /* Auth */
-      #auth-section {
-        padding: 16px;
-      }
-      #auth-section input {
+      .auth-view input {
         width: 100%;
         padding: 8px 10px;
         margin-bottom: 8px;
@@ -35,28 +32,28 @@
         border-radius: 4px;
         font-size: 13px;
       }
-      #auth-section .btn-row {
-        display: flex;
-        gap: 8px;
-      }
-      #auth-section button {
-        flex: 1;
-        padding: 8px;
-        border: none;
-        border-radius: 4px;
-        font-size: 13px;
-        cursor: pointer;
-        color: #fff;
-        background: #1a73e8;
-      }
-      #auth-section button:hover {
+      .auth-view button:hover {
         background: #1558b0;
       }
-      #auth-error {
+      .auth-error {
         color: #d93025;
         font-size: 12px;
         margin-top: 6px;
         display: none;
+      }
+      .auth-view {
+        padding: 16px;
+      }
+      .toggle-link {
+        font-size: 12px;
+        color: #555;
+        margin-top: 10px;
+        text-align: center;
+      }
+      .toggle-link a {
+        color: #1a73e8;
+        text-decoration: none;
+        font-weight: 600;
       }
 
       /* Dashboard */
@@ -114,28 +111,33 @@
     </style>
   </head>
   <body>
-    <header>The Hive — Tab Tracker</header>
+    <header>The Hive &mdash; Tab Tracker</header>
 
-  <div id="auth-section">
-  <input id="auth-username" type="text" placeholder="Username" />
-  <input id="auth-email" type="email" placeholder="Email" />
-  <input id="auth-password" type="password" placeholder="Password" />
+    <!-- Login View -->
+    <div id="login-section" class="auth-view">
+      <input id="login-email" type="email" placeholder="Email" />
+      <input id="login-password" type="password" placeholder="Password" />
+      <button id="btn-login" style="width:100%;padding:8px;border:none;border-radius:4px;font-size:13px;cursor:pointer;color:#fff;background:#1a73e8;">Log In</button>
+      <p class="toggle-link">Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
+      <div id="login-error" class="auth-error"></div>
+    </div>
 
-  <select id="auth-persona" style="width:100%;padding:8px 10px;margin-bottom:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
-    <option value="">Select Category</option>
-    <option value="GENERAL">General</option>
-    <option value="CS">Computer Science</option>
-    <option value="DESIGN">Design</option>
-    <option value="BUSINESS">Business</option>
-  </select>
-
-  <div class="btn-row">
-    <button id="btn-login">Log In</button>
-    <button id="btn-signup">Sign Up</button>
-  </div>
-
-  <div id="auth-error" style="color:#d93025;font-size:12px;margin-top:6px;display:none;"></div>
-</div>
+    <!-- Signup View -->
+    <div id="signup-section" class="auth-view" style="display:none;">
+      <input id="signup-username" type="text" placeholder="Username" />
+      <input id="signup-email" type="email" placeholder="Email" />
+      <input id="signup-password" type="password" placeholder="Password" />
+      <select id="signup-persona" style="width:100%;padding:8px 10px;margin-bottom:8px;border:1px solid #ccc;border-radius:4px;font-size:13px;">
+        <option value="">Select Category</option>
+        <option value="GENERAL">General</option>
+        <option value="CS">Computer Science</option>
+        <option value="DESIGN">Design</option>
+        <option value="BUSINESS">Business</option>
+      </select>
+      <button id="btn-signup" style="width:100%;padding:8px;border:none;border-radius:4px;font-size:13px;cursor:pointer;color:#fff;background:#1a73e8;">Sign Up</button>
+      <p class="toggle-link">Already have an account? <a href="#" id="show-login">Log In</a></p>
+      <div id="signup-error" class="auth-error"></div>
+    </div>
 
     <!-- Dashboard -->
     <div id="dashboard">

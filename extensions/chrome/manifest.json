@@ -5,14 +5,9 @@
   "description": "Tracks website usage and syncs with The Hive central server.",
   "permissions": [
     "tabs",
-<<<<<<< Updated upstream
     "activeWindow",
     "storage",
     "idle"
-=======
-    "activeTab",
-    "storage"
->>>>>>> Stashed changes
   ],
   "host_permissions": [
     "http://localhost:3000/*"
