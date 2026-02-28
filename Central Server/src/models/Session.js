@@ -1,6 +1,5 @@
 // models/Session.js
 // In-memory store for active sessions (one per device)
-// This avoids DB overhead for high-frequency open/close events
 
 const activeSessions = new Map();
 
@@ -9,9 +8,19 @@ const Session = {
     return activeSessions.get(deviceId) || null;
   },
 
+  /**
+   * sessionData: {
+   *   userId, site, timestamp,
+   *   idleState: "ACTIVE" | "IDLE" | "LOCKED",
+   *   accumulatedMs: time banked before idle pauses
+   * }
+   */
   set(deviceId, sessionData) {
-    // sessionData: { userId, site, timestamp }
-    activeSessions.set(deviceId, sessionData);
+    activeSessions.set(deviceId, {
+      idleState: "ACTIVE",
+      accumulatedMs: 0,
+      ...sessionData,
+    });
   },
 
   remove(deviceId) {

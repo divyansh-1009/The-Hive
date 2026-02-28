@@ -78,18 +78,32 @@ function initWebSocket(server) {
 
 /**
  * Build global stats from active sessions
+ * Filters out idle/locked users from counts
  */
 function buildGlobalStats() {
   const sessions = Session.getAll();
-  const totalActive = sessions.size;
+  
+  // Separate active from idle/locked
+  let totalActive = 0;
+  let totalIdle = 0;
+  let totalLocked = 0;
 
   const categoryBreakdown = {};
   const activeSites = {};
 
   for (const [deviceId, session] of sessions) {
-    const category = getCategory(session.site) || "UNKNOWN";
-    categoryBreakdown[category] = (categoryBreakdown[category] || 0) + 1;
-    activeSites[session.site] = (activeSites[session.site] || 0) + 1;
+    const idleState = session.idleState || "ACTIVE";
+    
+    if (idleState === "IDLE") {
+      totalIdle++;
+    } else if (idleState === "LOCKED") {
+      totalLocked++;
+    } else {
+      totalActive++;
+      const category = getCategory(session.site) || "UNKNOWN";
+      categoryBreakdown[category] = (categoryBreakdown[category] || 0) + 1;
+      activeSites[session.site] = (activeSites[session.site] || 0) + 1;
+    }
   }
 
   const topSites = Object.entries(activeSites)
@@ -97,7 +111,13 @@ function buildGlobalStats() {
     .slice(0, 5)
     .map(([site, count]) => ({ site, count }));
 
-  return { totalActive, categoryBreakdown, topSites };
+  return { 
+    totalActive, 
+    totalIdle,
+    totalLocked,
+    categoryBreakdown, 
+    topSites 
+  };
 }
 
 /**

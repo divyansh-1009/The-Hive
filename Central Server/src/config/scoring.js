@@ -9,8 +9,9 @@ module.exports = {
   // Streak
   T_MIN: 60, // minutes of positive-weight activity needed per day
 
-  // Session management
-  STALE_SESSION_THRESHOLD_MS: 30 * 60 * 1000, // 30 minutes
+  // Idle detection
+  IDLE_DETECTION_SECONDS: 300, // 5 minutes — extension uses chrome.idle API
+  // Extension checks every 30s and sends idleState with each event
 
   // Tier percentile boundaries
   TIERS: {
@@ -28,6 +29,6 @@ module.exports = {
   SIMILARITY_THRESHOLD: 0.5,
 
   // Embedding model
-  EMBEDDING_MODEL: "Xenova/all-MiniLM-L6-v2",
-  EMBEDDING_DIMENSION: 384, // output dimension of all-MiniLM-L6-v2
+  EMBEDDING_MODEL: "Xenova/bge-small-en-v1.5",
+  EMBEDDING_DIMENSION: 384, // output dimension of bge-small-en-v1.5
 };

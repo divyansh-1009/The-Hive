@@ -3,7 +3,6 @@
 const Session = require("../models/Session");
 const Device = require("../models/Device");
 const Activity = require("../models/Activity");
-const { STALE_SESSION_THRESHOLD_MS } = require("../config/scoring");
 const { broadcastUpdate } = require("./liveController");
 const { categorize } = require("./embeddingController");
 
@@ -13,16 +12,29 @@ const { categorize } = require("./embeddingController");
  */
 async function resolveCategory(appOrSite, source) {
   const result = await categorize(appOrSite, source);
-  // If below threshold, categorize returned null → use UNCAT
   return result.category || "UNCAT";
 }
 
-// Helper: finalize a session and accumulate into daily activity
-async function finalizeSession(session, closeTimestamp) {
-  const durationMs = closeTimestamp - session.timestamp;
+/**
+ * Compute actual active duration for a session, accounting for idle pauses.
+ * accumulatedMs tracks time banked before idle pauses.
+ * If currently idle, only return accumulated time.
+ * If active, return accumulated + time since last resume/start.
+ */
+function computeSessionDuration(session, closeTimestamp) {
+  if (session.idleState === "IDLE" || session.idleState === "LOCKED") {
+    return session.accumulatedMs || 0;
+  }
+  return (session.accumulatedMs || 0) + (closeTimestamp - session.timestamp);
+}
 
-  // Discard if exceeds stale threshold or invalid
-  if (durationMs > STALE_SESSION_THRESHOLD_MS || durationMs <= 0) return null;
+/**
+ * Finalize a session and accumulate into daily activity
+ */
+async function finalizeSession(session, closeTimestamp) {
+  const durationMs = computeSessionDuration(session, closeTimestamp);
+
+  if (durationMs <= 0) return null;
 
   const durationMinutes = durationMs / 60000;
   const category = await resolveCategory(session.site, "chrome");
@@ -33,12 +45,14 @@ async function finalizeSession(session, closeTimestamp) {
 }
 
 // POST /api/activity/chrome
-// Body: { deviceId, site, state, timestamp }
+// Body: { deviceId, site, state, idleState, timestamp }
+// state: "active" | "closed"
+// idleState: "ACTIVE" | "IDLE" | "LOCKED" (sent by extension every 30s)
 async function handleChromeEvent(req, res) {
   try {
-    const { deviceId, site, state, timestamp } = req.body;
+    const { deviceId, site, state, idleState, timestamp } = req.body;
 
-    if (!deviceId || !site || !state || !timestamp) {
+    if (!deviceId || !state || !timestamp) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -48,20 +62,34 @@ async function handleChromeEvent(req, res) {
     }
 
     let finalized = null;
+    const existing = Session.get(deviceId);
+    const newIdleState = idleState || "ACTIVE";
 
     if (state === "active") {
-      const existing = Session.get(deviceId);
+      if (!site) {
+        return res.status(400).json({ error: "Site required for active state" });
+      }
+
+      // Implicitly close previous session if exists
       if (existing) {
         finalized = await finalizeSession(existing, timestamp);
       }
-      Session.set(deviceId, { userId, site, timestamp });
+
+      // Start new session
+      Session.set(deviceId, {
+        userId,
+        site,
+        timestamp,
+        idleState: newIdleState,
+        accumulatedMs: 0,
+      });
       broadcastUpdate();
 
     } else if (state === "closed") {
-      const existing = Session.get(deviceId);
       if (!existing) {
         return res.status(200).json({ message: "No active session to close, discarded" });
       }
+
       finalized = await finalizeSession(existing, timestamp);
       Session.remove(deviceId);
       broadcastUpdate();
@@ -70,9 +98,35 @@ async function handleChromeEvent(req, res) {
       return res.status(400).json({ error: "Invalid state. Use 'active' or 'closed'" });
     }
 
+    // Handle idle state transitions on existing session
+    // Extension sends idleState with every event — detect transitions
+    if (state === "active" && existing === null) {
+      // Fresh session, nothing to transition
+    } else if (Session.get(deviceId)) {
+      const current = Session.get(deviceId);
+      const prevIdle = current.idleState || "ACTIVE";
+
+      if (prevIdle === "ACTIVE" && (newIdleState === "IDLE" || newIdleState === "LOCKED")) {
+        // Transition: ACTIVE → IDLE/LOCKED — bank active time, pause timer
+        current.accumulatedMs = (current.accumulatedMs || 0) + (timestamp - current.timestamp);
+        current.idleState = newIdleState;
+
+      } else if ((prevIdle === "IDLE" || prevIdle === "LOCKED") && newIdleState === "ACTIVE") {
+        // Transition: IDLE/LOCKED → ACTIVE — resume timer from now
+        current.timestamp = timestamp;
+        current.idleState = "ACTIVE";
+
+      } else {
+        // Same state — just update the idleState field
+        current.idleState = newIdleState;
+      }
+      broadcastUpdate();
+    }
+
     return res.status(200).json({
       message: "Event processed",
       finalized,
+      idleState: newIdleState,
       activeSession: Session.get(deviceId) || null,
     });
   } catch (err) {
